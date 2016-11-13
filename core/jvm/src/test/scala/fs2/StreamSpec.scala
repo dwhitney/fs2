@@ -76,6 +76,26 @@ class StreamSpec extends Fs2Spec {
       r3.contains(Left(Err)) shouldBe true
     }
 
+    "onError should not lose items" in {
+      val stream = Stream.emits(List(1, 2, 3, 4)).map{ i => 
+        if(i == 3) throw new Exception("no 3s!")
+        else i
+      }.onError(_ => Stream.emit(100))
+
+      stream.toList shouldBe List(1, 2, 100)
+
+    }
+
+    "onError should not lose items (split streams test)" in {
+      val stream = (Stream.emits(List(1, 2)) ++ Stream(3, 4)).map{ i => 
+        if(i == 3) throw new Exception("no 3s!")
+        else i
+      }.onError(_ => Stream.emit(100))
+
+      stream.toList shouldBe List(1, 2, 100)
+
+    }
+
     "range" in {
       Stream.range(0, 100).toList shouldBe List.range(0, 100)
       Stream.range(0, 1).toList shouldBe List.range(0, 1)
